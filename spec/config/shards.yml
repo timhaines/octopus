@@ -1,5 +1,5 @@
 mysql: &mysql
-  adapter: mysql
+  adapter: mysql2
   host: localhost
 
 octopus:

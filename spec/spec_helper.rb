@@ -1,6 +1,6 @@
 require "rubygems"
 require "bundler/setup"
-require "mysql"
+require "mysql2"
 require "active_record"
 require "action_controller"
 require "octopus"
