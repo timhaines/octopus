@@ -4,12 +4,16 @@ module Octopus::Model
     base.extend(ClassMethods)
     base.hijack_connection()
     base.hijack_initializer()
+    base.class_attribute :replicated
+    base.class_attribute :sharded
+    base.class_attribute :octopus_table_name
+    base.class_attribute :use_normal_connection
   end
 
   module SharedMethods
     def clean_table_name
       return unless self.connection_proxy.should_clean_table_name?
-      if self != ActiveRecord::Base && self.respond_to?(:reset_table_name) && !self.read_inheritable_attribute(:set_table_name)
+      if self != ActiveRecord::Base && self.respond_to?(:reset_table_name) && !self.octopus_table_name
         self.reset_table_name()
       end
 
@@ -52,7 +56,7 @@ module Octopus::Model
 
     def hijack_connection()
       def self.should_use_normal_connection?
-        (defined?(Rails) && Octopus.config() && !Octopus.environments.include?(Rails.env.to_s)) || self.read_inheritable_attribute(:establish_connection)
+        (defined?(Rails) && Octopus.config() && !Octopus.environments.include?(Rails.env.to_s)) || self.use_normal_connection
       end
 
       def self.connection_proxy
@@ -104,20 +108,28 @@ module Octopus::Model
     include SharedMethods
 
     def replicated_model()
-      write_inheritable_attribute(:replicated, true)
+      class_attribute :replicated
+      self.replicated = true
+      #write_inheritable_attribute(:replicated, true)
     end
 
     def sharded_model()
-      write_inheritable_attribute(:sharded, true)
+      class_attribute :sharded
+      self.sharded = true
+      # write_inheritable_attribute(:sharded, true)
     end
 
     def octopus_establish_connection(spec = nil)
-      write_inheritable_attribute(:establish_connection, true)
+      class_attribute :use_normal_connection
+      self.use_normal_connection = true
+      # write_inheritable_attribute(:establish_connection, true)
       establish_connection(spec)
     end
 
     def octopus_set_table_name(value = nil, &block)
-      write_inheritable_attribute(:set_table_name, true)
+      class_attribute :octopus_table_name
+      self.octopus_table_name = value
+      # write_inheritable_attribute(:set_table_name, true)
       set_table_name(value, &block)
     end
   end
